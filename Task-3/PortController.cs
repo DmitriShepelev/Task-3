@@ -1,21 +1,30 @@
 ﻿using System.Collections.Generic;
+using System.Runtime.Serialization.Formatters;
 
 namespace Task_3
 {
-    public class PortController
+    public static class PortController
     {
-        private ICollection<Port> _items;
+        private static readonly Dictionary<string, Port> Dictionary = new();
         //создать контроллер, инжектировать зависимости
-        public IEnumerable<Port> Items { get { return _items; } }
-        public PortController(ICollection<Port> items)
+        // public PortController() => _dictionary = new Dictionary<string, Port>();
+        //public static PortController Instance => this;
+
+        public static Port GetPort(string targetNumber)
         {
-            _items = items;
+            Dictionary.TryGetValue(targetNumber, out var result);
+            return result;
         }
 
-        public Port GetPort(string targetNumber)
+        public static void AddMatchPair(string phoneNumber, Port port)
         {
-            if (targetNumber == "222-22-22") return new Port();
-            return null;
+            if (!string.IsNullOrWhiteSpace(phoneNumber) && port != null)
+                Dictionary.Add(phoneNumber, port);
+        }
+
+        public static void ChangePhonePort(string phoneNumber, Port port)
+        {
+            if (Dictionary.ContainsKey(phoneNumber) && port != null) Dictionary[phoneNumber] = port;
         }
     }
 }

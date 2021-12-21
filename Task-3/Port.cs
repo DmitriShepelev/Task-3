@@ -9,6 +9,8 @@ namespace Task_3
     public class Port
     {
         public PortState State { get; set; }
+        public int Id => GetHashCode();
+
         public event EventHandler<CallEventArgs> OutgoingCall;
         public event EventHandler<CallEventArgs> IncomingCall;
 

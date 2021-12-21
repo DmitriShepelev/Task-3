@@ -9,16 +9,40 @@ namespace Task_3
 {
     public class Phone
     {
+        public Port StationPort { get; }
+        public string PhoneNumber { get; }
+
+    
+
         public event EventHandler<CallEventArgs> OutgoingCall;
         public event EventHandler<CallEventArgs> IncomingCall;
         public event EventHandler AcceptCall;
         public event EventHandler RejectCall;
         public event EventHandler<IPort> ConnectingToPort;
 
-        public void Call(CallEventArgs args)
+        public Phone(string number, Port stationPort)
+        {
+            PhoneNumber = number;
+            StationPort = stationPort;
+        }
+
+        public Port ConnectPort()
+        {
+            this.OutgoingCall += StationPort.OnPhoneOutgoingCall;
+            return StationPort;
+        }
+
+        public void DisconnectPort()
+        {
+            StationPort.State = PortState.Free;
+            this.OutgoingCall -= StationPort.OnPhoneOutgoingCall;
+        }
+
+        public void Call(string targetPhoneNumber)
         {
             Console.WriteLine("\nтел1 начинает звонок\n");
-            OnOutgoingCall(this, new CallEventArgs() {SourcePhoneNumber = "111-11-11", TargetPhoneNumber = args.TargetPhoneNumber });
+            OnOutgoingCall(this,
+                new CallEventArgs() {SourcePhoneNumber = PhoneNumber, TargetPhoneNumber = targetPhoneNumber, CallState = CallState.Initiation});
         }
 
         protected virtual void OnOutgoingCall(object sender, CallEventArgs args)
@@ -37,6 +61,10 @@ namespace Task_3
         {
             // дальше этот метод должен бежать по другой цепочке событий, добежать до станции, станция проверяет и если да (accept) меняет свое состояние (н.п. из состояния ожидания в состояние 
             // соединения, а потом станция генерирует событие для биллинговой системы.
+
+            Console.WriteLine("Трубку подняли");
         }
+
+
     }
 }

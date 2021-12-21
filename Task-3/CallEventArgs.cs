@@ -10,5 +10,6 @@ namespace Task_3
     {
         public string TargetPhoneNumber { get; set; }
         public string SourcePhoneNumber { get; set; }
+        public CallState CallState { get; set; }
     }
 }
