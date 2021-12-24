@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Task_3.BillingSystem;
+using Task_3.DateBase;
 
 namespace Task_3
 {
@@ -21,11 +23,11 @@ namespace Task_3
 
             ////bindings
             //// не обязательно здесь, может быть в разных файлах
-            //p1.OutgoingCall += port1.OnPhoneOutgoingCall;
-            //port1.OutgoingCall += station.OnPhoneOutgoingCall;
+            //p1.OutgoingCall += port1.OnPortOutgoingCall;
+            //port1.OutgoingCall += station.OnPortOutgoingCall;
 
-            //p2.OutgoingCall += port2.OnPhoneOutgoingCall;
-            //port2.OutgoingCall += station.OnPhoneOutgoingCall;
+            //p2.OutgoingCall += port2.OnPortOutgoingCall;
+            //port2.OutgoingCall += station.OnPortOutgoingCall;
 
             //port1.IncomingCall += p1.OnIncomingCall;
             //port2.IncomingCall += p2.OnIncomingCall;
@@ -34,24 +36,36 @@ namespace Task_3
             //p1.Call(new CallEventArgs() { TargetPhoneNumber = "222-22-22" });
 
 
-            var contract1 = new Contract("Dmitri", "Shepelev", new TariffPlanLight());
-            var contract2 = new Contract("Arkadiy", "Dobkin", new TariffPlanLight());
+            //var contract1 = new Contract("Dmitri", "Shepelev", new TariffPlanLight());
+            //var contract2 = new Contract("Arkadiy", "Dobkin", new TariffPlanLight());
 
-            var subscriber1 = new Subscriber(contract1, "752-69-16");
-            var subscriber2 = new Subscriber(contract2, "111-11-11");
+            //var subscriber1 = new Subscriber(contract1, "752-69-16");
+            //var subscriber2 = new Subscriber(contract2, "111-11-11");
 
-            var phone1 = subscriber1.Phone;
-            var phone2 = subscriber2.Phone;
+            //var phone1 = subscriber1.Phone;
+            //var phone2 = subscriber2.Phone;
+            //phone1.ConnectPort();
+            //phone2.ConnectPort();
 
-            Station station = new();
+            ////Station station = new();
 
-            phone1.StationPort.OutgoingCall += station.OnPhoneOutgoingCall;
-            phone1.StationPort.IncomingCall += phone1.OnIncomingCall;
+            ////phone1.Port.OutgoingCall += Station.OnPortOutgoingCall;
+            ////phone1.Port.IncomingCall += phone1.OnIncomingCall;
 
 
-            phone1.ConnectPort();
-            phone1.Call("111-11-11");
+            ////phone2.Port.IncomingCall += phone2.OnIncomingCall;
 
+
+            //phone1.Call("111-11-11");
+
+            var db = new DataBase();
+            db.Calls.Add(new Call() {
+                StartCall = DateTime.Now,
+                EndCall = DateTime.Now + TimeSpan.FromSeconds(3)
+            });
+
+            var query = db.Contracts.Where(x => x.Id == 4812853).Join(db.Calls, ct => ct.Id, cl => cl.ContractId,
+                (contract, call) => call.CallCost);
         }
 
     }

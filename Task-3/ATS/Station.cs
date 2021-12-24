@@ -2,51 +2,93 @@
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static Task_3.PortController;
+using Task_3.ATS.States;
+using Task_3.DateBase;
+using static Task_3.ATS.PortController;
 
-namespace Task_3
+namespace Task_3.ATS
 {
     public class Station
     {
-        private static readonly List<Port> ListPorts;
-        private static readonly int TotalNumberOfPorts = Convert.ToInt32
+        private readonly List<Port> _listPorts;
+        private readonly int _totalNumberOfPorts = Convert.ToInt32
             (ConfigurationManager.AppSettings.Get("totalNumberOfPorts"));
 
-        static Station()
+        private readonly PortController _portController;
+        private List<CallEventArgs> _callsInInitializationState = new();
+        private List<CallEventArgs> _callsInDialingState = new();
+        //public event EventHandler<CallEventArgs> CallRecordCreate;
+
+        public Station(PortController portController)
         {
-            ListPorts = new List<Port>(TotalNumberOfPorts);
-            SetListPorts();
-        }
-
-        public static Port GetFreePort => ListPorts.FirstOrDefault(x => x.State == PortState.Free);
-
-        //private ICollection<CallEventArgs> CallsInInitializationState = new List<CallEventArgs>();
-
-        public event EventHandler<CallEventArgs> CallRecordCreate;
-        public void OnPhoneOutgoingCall(object sender, CallEventArgs args)
-        {
-            args.CallState = CallState.Initiation;
-            Console.WriteLine($"Станция:Телефон пытается дозвонится по номеру {args.TargetPhoneNumber}");
-            // нужен контроллер портов "определить в каком состоянии находится процесс инициации звонка"
-            // телефоны станции не нужны, а вот порты - нужны, по портам будет выполнятся процесс поиска
-            // например словарик - соответсвие порта телефонному номеру ??? по модели событий - не получится. нужен объект контроллера портов, внутри которого можно спрятать все необходимое
-            // соответствия портов можно забрать до того как станция запустится, тогда на однин вид сущностей станция будет знать меньше (не нужны телефоны)
-
-            GetPort(args.TargetPhoneNumber)?.OnIncomingCall(sender, args);
+            _portController = portController;
+            _listPorts = new List<Port>(_totalNumberOfPorts);
+            this.SetListPorts();
+            this.BindPorts();
         }
 
 
-
-
-        private static void SetListPorts()
-        {
-            for (int i = 0; i < ListPorts.Capacity; i++)
-            {
-                ListPorts.Add(new Port());
+        public Port GetFreePort {
+            get {
+                var port = _listPorts.FirstOrDefault(x => x.State == PortState.Free && !x.IsUsed);
+                if (port != null)
+                {
+                    port.IsUsed = true;
+                }
+                return port;
             }
         }
+
+
+        public void OnPortOutgoingCall(object sender, CallEventArgs args)
+        {
+            Console.WriteLine($"Станция:Телефон пытается дозвонится по номеру {args.TargetPhoneNumber}");
+
+            _callsInInitializationState.Add(args);
+
+            var targetPort = _portController.GetPort(args.TargetPhoneNumber);
+            if (targetPort != null && targetPort.State == PortState.Free)
+            {
+                args.CallState = CallState.Dialing;
+                _portController.GetPort(args.TargetPhoneNumber)?.OnIncomingCall(sender, args);
+            }
+        }
+
+        public void OnPortAcceptCall(object sender, CallEventArgs args)
+        {
+            var index = _callsInInitializationState.FindIndex(0, _callsInInitializationState.Count,
+                i => i.Id == args.Id);
+            _callsInDialingState.Add(_callsInInitializationState[index]);
+            _callsInInitializationState.RemoveAt(index);
+        }
+
+        public void OnPortRejectCall(object sender, CallEventArgs args)
+        {
+            var index = _callsInInitializationState.FindIndex(0, _callsInInitializationState.Count,
+                i => i.Id == args.Id);
+            _callsInDialingState.Add(_callsInInitializationState[index]);
+            _callsInInitializationState.RemoveAt(index);
+        }
+        public void OnPortEndOfCall(object sender, CallEventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+        private void SetListPorts()
+        {
+            for (var i = 0; i < _listPorts.Capacity; i++) _listPorts.Add(new Port());
+        }
+
+        private void BindPorts()
+        {
+            foreach (var port in _listPorts)
+            {
+                port.OutgoingCall += this.OnPortOutgoingCall;
+                port.AcceptCall += this.OnPortAcceptCall;
+                port.RejectCall += this.OnPortRejectCall;
+                port.EndOfCall += this.OnPortEndOfCall;
+            }
+        }
+
     }
 }
 //на станции несколько контейнеров 1. те звонки, которые в состоянии инициализации (соединение еще не произошло): либо один звонит другому, либо ожидает от него ответа (срабатывает на станции на первой стадии)

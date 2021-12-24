@@ -1,4 +1,4 @@
-﻿namespace Task_3
+﻿namespace Task_3.ATS.States
 {
     public enum PortState
     {
