@@ -11,6 +11,6 @@ namespace Task_3.DateBase
     {
         public int Id { get; }
         public string Name { get; }
-        public decimal PricePerMinute { get; }
+        public decimal PricePerSecond { get; }
     }
 }

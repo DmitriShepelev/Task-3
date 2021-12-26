@@ -13,6 +13,6 @@ namespace Task_3.MobileOperator
 
         public string Name => "Max";
 
-        public decimal PricePerMinute => 100500m;
+        public decimal PricePerSecond => 0.35m;
     }
 }

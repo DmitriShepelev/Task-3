@@ -4,7 +4,6 @@
     {
         Initiation,
         Dialing,
-        Connection,
-        Disconnection
+        Connection
     }
 }

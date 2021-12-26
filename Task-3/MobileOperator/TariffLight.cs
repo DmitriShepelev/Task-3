@@ -11,7 +11,7 @@ namespace Task_3.MobileOperator
     {
         public int Id => 111;
         public string Name => "Light";
-        public decimal PricePerMinute => 0.20m;
+        public decimal PricePerSecond => 0.15m;
 
     }
 }
